@@ -9,7 +9,17 @@
         <TextBlock Text="Indítópanel" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
 
         <Button x:Name="BtnStart" Content="Overlay Indítása" Click="BtnStart_Click" Height="40" Margin="0,10,0,10"/>
-        <Button x:Name="BtnStop" Content="Overlay Bezárása" Click="BtnStop_Click" Height="40" IsEnabled="False" Margin="0,0,0,10"/>
+        <Button x:Name="BtnStop" Content="Overlay Bezárása" Click="BtnStop_Click" Height="40" IsEnabled="False" Margin="0,10,0,10"/>
+
+        <TextBlock Text="Adminnév:" FontSize="16" FontWeight="Normal" HorizontalAlignment="Center"/>
+        <TextBox x:Name="txtBemenet" 
+         Width="150" 
+         Height="20"
+         TextAlignment="Center"
+         TextChanged="TxtBemenet_TextChanged"
+         MaxLines="1"              
+         AcceptsReturn="False"
+         KeyDown="TxtBemenet_KeyDown"/>
 
     </StackPanel>
 </Window>

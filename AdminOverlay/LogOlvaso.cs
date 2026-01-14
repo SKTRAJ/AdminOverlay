@@ -17,13 +17,14 @@ namespace AdminOverlay
     {
         
         private const string LOG_MAPPA_UTVONAL = @"C:\SeeMTA\mta\logs";
-        private const string ADMIN_NAME = "Bork"; // Admin név
+
+        public string adminName { get; set; } = ""; // Admin név
 
         private string? _aktualisFajlUtvonal;
         private long _utolsoOlvasottPozicio = 0;
 
         
-        public int ReportSzamlalo { get; private set; } = 0;
+        public int reportSzamlalo { get; private set; } = 0;
 
         
         private double _taroltDutyPerc = 0;
@@ -43,7 +44,7 @@ namespace AdminOverlay
             if (!Directory.Exists(LOG_MAPPA_UTVONAL)) return;
 
             
-            ReportSzamlalo = 0;
+            reportSzamlalo = 0;
             _taroltDutyPerc = 0;
             _taroltOffDutyPerc = 0;
             _aktualisStatusz = Statusz.Semmi;
@@ -115,7 +116,7 @@ namespace AdminOverlay
             if (sor.Contains("[SeeMTA - Siker]: Sikeresen lezártad az ügyet!") ||
                 sor.Contains("[SeeMTA - Figyelmeztetés]: A bejelentés automatikus lezárásra került"))
             {
-                ReportSzamlalo++;
+                reportSzamlalo++;
             }
 
             
@@ -144,7 +145,7 @@ namespace AdminOverlay
 
             // Offduty indítás trigger
             if (sor.Contains("[SeeMTA]: Jó szórakozást kívánunk!") ||
-                sor.Contains($"[SeeMTA - AdminDuty]: {ADMIN_NAME} kilépett az adminszolgálatból."))
+                sor.Contains($"[SeeMTA - AdminDuty]: {adminName} kilépett az adminszolgálatból."))
             {
                 if (_aktualisStatusz == Statusz.OnDuty) Lezaras(aktualisSorIdeje);
 
@@ -155,7 +156,7 @@ namespace AdminOverlay
                 }
             }
             // Onduty indítás trigger
-            else if (sor.Contains($"[SeeMTA - AdminDuty]: {ADMIN_NAME} adminszolgálatba lépett."))
+            else if (sor.Contains($"[SeeMTA - AdminDuty]: {adminName} adminszolgálatba lépett."))
             {
                 if (_aktualisStatusz == Statusz.OffDuty) Lezaras(aktualisSorIdeje);
 
