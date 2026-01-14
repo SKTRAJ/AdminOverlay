@@ -17,7 +17,7 @@ namespace AdminOverlay
     {
         
         private const string LOG_MAPPA_UTVONAL = @"C:\SeeMTA\mta\logs";
-        private const string KARAKTER_NEV = "Bork"; // Admin név
+        private const string ADMIN_NAME = "Bork"; // Admin név
 
         private string? _aktualisFajlUtvonal;
         private long _utolsoOlvasottPozicio = 0;
@@ -144,7 +144,7 @@ namespace AdminOverlay
 
             // Offduty indítás trigger
             if (sor.Contains("[SeeMTA]: Jó szórakozást kívánunk!") ||
-                sor.Contains($"[SeeMTA - AdminDuty]: {KARAKTER_NEV} kilépett az adminszolgálatból."))
+                sor.Contains($"[SeeMTA - AdminDuty]: {ADMIN_NAME} kilépett az adminszolgálatból."))
             {
                 if (_aktualisStatusz == Statusz.OnDuty) Lezaras(aktualisSorIdeje);
 
@@ -154,8 +154,8 @@ namespace AdminOverlay
                     _szakaszKezdete = aktualisSorIdeje;
                 }
             }
-            // Onfuty indítás trigger
-            else if (sor.Contains($"[SeeMTA - AdminDuty]: {KARAKTER_NEV} adminszolgálatba lépett."))
+            // Onduty indítás trigger
+            else if (sor.Contains($"[SeeMTA - AdminDuty]: {ADMIN_NAME} adminszolgálatba lépett."))
             {
                 if (_aktualisStatusz == Statusz.OffDuty) Lezaras(aktualisSorIdeje);
 
@@ -165,12 +165,7 @@ namespace AdminOverlay
                     _szakaszKezdete = aktualisSorIdeje;
                 }
             }
-            // Kicknél minden lezárul
-            else if (sor.Contains($"[SeeMTA - Kick]: {KARAKTER_NEV} ki lett rúgva") ||
-                     sor.Contains("[SeeMTA - Kick]: Juluan Briec ki lett rúgva")) // (változóba)
-            {
-                Lezaras(aktualisSorIdeje);
-            }
+
 
             _utolsoLogIdopont = aktualisSorIdeje;
         }
