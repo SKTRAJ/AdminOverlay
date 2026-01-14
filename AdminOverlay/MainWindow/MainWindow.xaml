@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Bork Overlay"
         SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Background="#99ccff">
 
     <StackPanel Margin="20">
         <TextBlock Text="Indítópanel" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
@@ -20,6 +21,18 @@
          MaxLines="1"              
          AcceptsReturn="False"
          KeyDown="TxtBemenet_KeyDown"/>
+
+
+        <TextBlock Text="Log mappa elérési útvonal:" FontSize="16" FontWeight="Normal" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+        <TextBlock Text="(Hagyd üresen, ha: C:\SeeMTA\mta\logs)" FontSize="12" FontWeight="Normal" HorizontalAlignment="Center" Margin="0,0,0,3.5"/>
+        <TextBox x:Name="logBemenet" 
+        Width="230" 
+        Height="20"
+        TextAlignment="Center"
+        TextChanged="logBemenet_TextChanged"
+        MaxLines="1"              
+        AcceptsReturn="False"
+        KeyDown="TxtBemenet_KeyDown"/>
 
     </StackPanel>
 </Window>

@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace AdminOverlay.Classes
 {
@@ -14,9 +15,9 @@ namespace AdminOverlay.Classes
     public class LogOlvaso
     {
 
-        private const string LOG_MAPPA_UTVONAL = @"C:\SeeMTA\mta\logs";
+        public string LogMappaUtvonal { get; set; } = @"C:\SeeMTA\mta\logs";
 
-        public string adminName { get; set; } = ""; // Admin név
+        public string AdminName { get; set; } = ""; // Admin név
 
         private string? _aktualisFajlUtvonal;
         private long _utolsoOlvasottPozicio = 0;
@@ -37,10 +38,13 @@ namespace AdminOverlay.Classes
         private Regex _idoBelyegRegex = new Regex(@"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]");
 
 
-        public void BeolvasasMindenLogbol()
+        public bool BeolvasasMindenLogbol() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
         {
-            if (!Directory.Exists(LOG_MAPPA_UTVONAL)) return;
-
+            if (!Directory.Exists(LogMappaUtvonal))
+            {
+                MessageBox.Show("Nem jó útvonal a log mappához.");
+                return false;
+            }
 
             reportSzamlalo = 0;
             _taroltDutyPerc = 0;
@@ -50,12 +54,12 @@ namespace AdminOverlay.Classes
 
             Regex datumosFajlMinta = new Regex(@"console-\d{4}-\d{2}-\d{2}");
 
-            var fajlok = Directory.GetFiles(LOG_MAPPA_UTVONAL, "console-*.log")
+            var fajlok = Directory.GetFiles(LogMappaUtvonal, "console-*.log")
                                   .Where(utvonal => datumosFajlMinta.IsMatch(Path.GetFileName(utvonal)))
                                   .OrderBy(f => f)
                                   .ToList();
 
-            if (fajlok.Count == 0) return;
+            if (fajlok.Count == 0) return false;
 
             foreach (var fajlUtvonal in fajlok)
             {
@@ -79,6 +83,8 @@ namespace AdminOverlay.Classes
                 }
                 catch { }
             }
+
+            return true;
         }
 
         public void OlvasdAzUjSorokat()
@@ -143,7 +149,7 @@ namespace AdminOverlay.Classes
 
             // Offduty indítás trigger
             if (sor.Contains("[SeeMTA]: Jó szórakozást kívánunk!") ||
-                sor.Contains($"[SeeMTA - AdminDuty]: {adminName} kilépett az adminszolgálatból."))
+                sor.Contains($"[SeeMTA - AdminDuty]: {AdminName} kilépett az adminszolgálatból."))
             {
                 if (_aktualisStatusz == Statusz.OnDuty) Lezaras(aktualisSorIdeje);
 
@@ -154,7 +160,7 @@ namespace AdminOverlay.Classes
                 }
             }
             // Onduty indítás trigger
-            else if (sor.Contains($"[SeeMTA - AdminDuty]: {adminName} adminszolgálatba lépett."))
+            else if (sor.Contains($"[SeeMTA - AdminDuty]: {AdminName} adminszolgálatba lépett."))
             {
                 if (_aktualisStatusz == Statusz.OffDuty) Lezaras(aktualisSorIdeje);
 
