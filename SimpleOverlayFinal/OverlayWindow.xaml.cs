@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace SimpleOverlayFinal
+namespace AdminOverlay
 {
     public partial class OverlayWindow : Window
     {

@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Threading;
 
-namespace SimpleOverlayFinal
+namespace AdminOverlay
 {
     public partial class MainWindow : Window
     {
@@ -13,7 +13,7 @@ namespace SimpleOverlayFinal
         public MainWindow()
         {
             InitializeComponent();
-
+                    
             _logOlvaso = new LogOlvaso();
 
             
