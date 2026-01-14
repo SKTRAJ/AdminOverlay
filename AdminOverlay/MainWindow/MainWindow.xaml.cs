@@ -15,11 +15,7 @@ namespace AdminOverlay
         {
             InitializeComponent();
 
-
-
             _logOlvaso = new LogOlvaso();
-
-
 
         }
 
