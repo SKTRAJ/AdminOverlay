@@ -50,7 +50,7 @@ namespace AdminOverlay
                 if (_logOlvaso.BeolvasasMindenLogbol())
                 {
                     _timer = new DispatcherTimer();
-                    _timer.Interval = TimeSpan.FromSeconds(1);
+                    _timer.Interval = TimeSpan.FromSeconds(1); // változonak kivenni és beállítható idő
                     _timer.Tick += Timer_Tick;
                     _timer.Start();
 
