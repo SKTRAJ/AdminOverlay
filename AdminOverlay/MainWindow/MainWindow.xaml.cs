@@ -15,8 +15,11 @@ namespace AdminOverlay
         {
             InitializeComponent();
 
+            
             _logOlvaso = new LogOlvaso();
-
+           
+            txtBemenet.Text = Properties.Settings.Default.mentettAdminNev;
+            logBemenet.Text = Properties.Settings.Default.mentettLogUtvonal;
         }
 
         private void Timer_Tick(object? sender, EventArgs e)
@@ -137,6 +140,14 @@ namespace AdminOverlay
             {
                 Keyboard.ClearFocus();
             }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Properties.Settings.Default.mentettAdminNev = txtBemenet.Text;
+            Properties.Settings.Default.mentettLogUtvonal = logBemenet.Text;
+
+            Properties.Settings.Default.Save();
         }
     }
 }

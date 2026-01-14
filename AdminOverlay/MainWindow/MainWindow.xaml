@@ -4,7 +4,8 @@
         Title="Bork Overlay"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen"
-        Background="#99ccff">
+        Background="#99ccff"
+        Closing="Window_Closing">
 
     <StackPanel Margin="20">
         <TextBlock Text="Indítópanel" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>

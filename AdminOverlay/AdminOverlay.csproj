@@ -12,6 +12,26 @@
 	<PublishSingleFile>true</PublishSingleFile>
 	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 	<PublishReadyToRun>false</PublishReadyToRun>
+	<ApplicationIcon>Képernyőkép 2026-01-13 092058.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Képernyőkép 2026-01-13 092058.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
 
 </Project>
