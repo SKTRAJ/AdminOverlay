@@ -13,6 +13,8 @@
 	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 	<PublishReadyToRun>false</PublishReadyToRun>
 	<ApplicationIcon>Képernyőkép 2026-01-13 092058.ico</ApplicationIcon>
+	<DebugType>embedded</DebugType>
+	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
