@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -21,14 +20,14 @@ namespace AdminOverlay
             int extendedStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
             SetWindowLong(hwnd, GWL_EXSTYLE, extendedStyle | WS_EX_TRANSPARENT);
 
-            
+
             var screenWidth = SystemParameters.PrimaryScreenWidth;
             var screenHeight = SystemParameters.PrimaryScreenHeight;
             this.Left = screenWidth - this.Width - 50;
             this.Top = (screenHeight / 2) - (this.Height / 2); // jobb közép az ablak
         }
 
-        
+
         public void FrissitAdatok(string reportSzam, string dutyPerc, string offDutyPerc)
         {
             TxtReport.Text = reportSzam;

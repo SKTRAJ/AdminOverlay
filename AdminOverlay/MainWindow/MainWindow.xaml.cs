@@ -1,4 +1,4 @@
-﻿using System;
+﻿using AdminOverlay.Classes;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -14,8 +14,8 @@ namespace AdminOverlay
         public MainWindow()
         {
             InitializeComponent();
-                    
-            _logOlvaso = new LogOlvaso(); 
+
+            _logOlvaso = new LogOlvaso();
 
         }
 
@@ -56,7 +56,7 @@ namespace AdminOverlay
 
                 _overlay = new OverlayWindow();
                 _overlay.Show();
-                
+
             }
             BtnStart.IsEnabled = false;
             BtnStop.IsEnabled = true;
@@ -70,7 +70,7 @@ namespace AdminOverlay
                 _timer.Stop();
                 _timer = null;
             }
-           
+
             if (_overlay != null)
             {
                 _overlay.Close();

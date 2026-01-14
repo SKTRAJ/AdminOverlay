@@ -1,10 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace AdminOverlay
+namespace AdminOverlay.Classes
 {
     // Ha fennvoltál a szerón és ment az overlay vezérlő is akár és amikor felmész új log fájl kezdődik, mert éjfél után van,
     // akkor újra kell indítani az egészet!
@@ -15,7 +13,7 @@ namespace AdminOverlay
 
     public class LogOlvaso
     {
-        
+
         private const string LOG_MAPPA_UTVONAL = @"C:\SeeMTA\mta\logs";
 
         public string adminName { get; set; } = ""; // Admin név
@@ -23,14 +21,14 @@ namespace AdminOverlay
         private string? _aktualisFajlUtvonal;
         private long _utolsoOlvasottPozicio = 0;
 
-        
+
         public int reportSzamlalo { get; private set; } = 0;
 
-        
+
         private double _taroltDutyPerc = 0;
         private double _taroltOffDutyPerc = 0;
 
-        
+
         private DateTime _utolsoLogIdopont = DateTime.MinValue;
         private DateTime _szakaszKezdete = DateTime.MinValue;
         private Statusz _aktualisStatusz = Statusz.Semmi;
@@ -43,7 +41,7 @@ namespace AdminOverlay
         {
             if (!Directory.Exists(LOG_MAPPA_UTVONAL)) return;
 
-            
+
             reportSzamlalo = 0;
             _taroltDutyPerc = 0;
             _taroltOffDutyPerc = 0;
@@ -109,7 +107,7 @@ namespace AdminOverlay
             catch { }
         }
 
-        
+
         private void FeldolgozSor(string sor)
         {
             // Reportok
@@ -119,7 +117,7 @@ namespace AdminOverlay
                 reportSzamlalo++;
             }
 
-            
+
             var match = _idoBelyegRegex.Match(sor);
             if (!match.Success) return;
 
@@ -135,7 +133,7 @@ namespace AdminOverlay
                 }
             }
 
-            
+
             if (sor.Contains("SeeMTA logger started"))
             {
                 if (_utolsoLogIdopont != DateTime.MinValue) Lezaras(_utolsoLogIdopont);
