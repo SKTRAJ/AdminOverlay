@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36804.6
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdminOverlay", "SimpleOverlayFinal\AdminOverlay.csproj", "{96EB3125-B800-40C4-A55E-7A963B5FFBE2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdminOverlay", "AdminOverlay\AdminOverlay.csproj", "{96EB3125-B800-40C4-A55E-7A963B5FFBE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
