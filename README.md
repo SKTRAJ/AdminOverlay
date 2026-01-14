@@ -7,5 +7,3 @@ Jelenleg újra kell indítani az egészet (vezérlőt is), ha éjfél előtt fen
 Akkor frissítődik real timeban az overlay, ha történik valami, íródik új log sor. (pl. OOC chatre küldessz egy pontot)
 
 Időtartamot se lehet még beállítani, szóval azokat veszi figyelembe, ami a logs mappában benne vannak console-20xx-xx-xx (dátum) fájlok. Ha, konkrét időtartamot szeretnél, akkor addig vedd ki a többi fájlt a mappából.
-
-Az elérési útvonal hardcode-olva van jelenleg 'C:\SeeMTA\mta\logs'-ként.
