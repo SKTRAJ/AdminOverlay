@@ -91,8 +91,17 @@ namespace AdminOverlay.Classes
         {
             if (string.IsNullOrEmpty(_aktualisFajlUtvonal)) return;
 
+
+            FileInfo fi = new FileInfo(_aktualisFajlUtvonal);
+
+            if (!fi.Exists || fi.Length == _utolsoOlvasottPozicio)
+            {
+                return;
+            }
+
             try
             {
+
                 using (var fs = new FileStream(_aktualisFajlUtvonal, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     if (fs.Length < _utolsoOlvasottPozicio) _utolsoOlvasottPozicio = 0;
@@ -106,13 +115,20 @@ namespace AdminOverlay.Classes
                         {
                             FeldolgozSor(sor);
                         }
+
                         _utolsoOlvasottPozicio = fs.Position;
                     }
                 }
             }
-            catch { }
-        }
+            catch (IOException)
+            {
 
+            }
+            catch
+            {
+
+            }
+        }
 
         private void FeldolgozSor(string sor)
         {
