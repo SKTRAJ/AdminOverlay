@@ -65,7 +65,7 @@ namespace AdminOverlay.Classes
             {
                 try
                 {
-                    using (var fs = new FileStream(fajlUtvonal, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var fs = new FileStream(fajlUtvonal, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                     using (var sr = new StreamReader(fs, Encoding.UTF8))
                     {
                         string? sor;
