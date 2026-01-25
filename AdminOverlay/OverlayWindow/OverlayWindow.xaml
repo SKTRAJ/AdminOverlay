@@ -31,27 +31,54 @@
 
             <TextBlock Grid.Row="0" Grid.Column="0" 
                        Text="Reportok: " 
-                       Foreground="Orange" FontWeight="Bold" FontSize="16" Margin="0,0,40,5"/>
+                       Foreground="Orange" FontWeight="Bold" FontSize="16" Margin="0,0,40,5">
+                <TextBlock.Effect>
+                    <DropShadowEffect ShadowDepth="0" Color="Black" BlurRadius="2" RenderingBias="Performance"/>
+                </TextBlock.Effect>
+            </TextBlock>
             <TextBlock Grid.Row="0" Grid.Column="1" 
                        x:Name="TxtReport" 
-                       Text="0" 
-                       Foreground="White" FontSize="16" FontWeight="Bold"/>
+                       Text="Loading..." 
+                       Foreground="White" FontSize="16" FontWeight="Bold">
+                <TextBlock.Effect>
+                    <DropShadowEffect ShadowDepth="0" Color="Black" BlurRadius="2" RenderingBias="Performance"/>
+                </TextBlock.Effect>
+            </TextBlock>
+
+
 
             <TextBlock Grid.Row="1" Grid.Column="0" 
                        Text="Duty perc: " 
-                       Foreground="Orange" FontWeight="Bold" FontSize="16" Margin="0,0,40,5"/>
+                       Foreground="Orange" FontWeight="Bold" FontSize="16" Margin="0,0,40,5">
+                <TextBlock.Effect>
+                    <DropShadowEffect ShadowDepth="0" Color="Black" BlurRadius="2" RenderingBias="Performance"/>
+                </TextBlock.Effect>
+            </TextBlock>
             <TextBlock Grid.Row="1" Grid.Column="1" 
                        x:Name="TxtDuty" 
-                       Text="3252" 
-                       Foreground="White" FontSize="16" FontWeight="Bold"/>
+                       Text="Loading..." 
+                       Foreground="White" FontSize="16" FontWeight="Bold">
+                <TextBlock.Effect>
+                    <DropShadowEffect ShadowDepth="0" Color="Black" BlurRadius="2" RenderingBias="Performance"/>
+                </TextBlock.Effect>
+            </TextBlock>
+                       
 
             <TextBlock Grid.Row="2" Grid.Column="0" 
                        Text="Offduty perc: " 
-                       Foreground="Orange" FontWeight="Bold" FontSize="16" Margin="0,0,20,5"/>
+                       Foreground="Orange" FontWeight="Bold" FontSize="16" Margin="0,0,20,5">
+                <TextBlock.Effect>
+                    <DropShadowEffect ShadowDepth="0" Color="Black" BlurRadius="2" RenderingBias="Performance"/>
+                </TextBlock.Effect>
+            </TextBlock>
             <TextBlock Grid.Row="2" Grid.Column="1" 
                        x:Name="TxtOffDuty" 
-                       Text="0" 
-                       Foreground="White" FontSize="16" FontWeight="Bold"/>
+                       Text="Loading..." 
+                       Foreground="White" FontSize="16" FontWeight="Bold">
+                <TextBlock.Effect>
+                    <DropShadowEffect ShadowDepth="0" Color="Black" BlurRadius="2" RenderingBias="Performance"/>
+                </TextBlock.Effect>
+            </TextBlock>
         </Grid>
     </Border>
 </Window>
