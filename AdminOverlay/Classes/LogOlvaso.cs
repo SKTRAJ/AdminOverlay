@@ -55,7 +55,7 @@ namespace AdminOverlay.Classes
             Regex datumosFajlMinta = new Regex(@"console-\d{4}-\d{2}-\d{2}");
 
             var fajlok = Directory.GetFiles(LogMappaUtvonal, "console-*.log")
-                                  .Where(utvonal => datumosFajlMinta.IsMatch(Path.GetFileName(utvonal)))
+                                  .Where(utvonal => datumosFajlMinta.IsMatch(Path.GetFileName(utvonal)))    //// TODO: Ezt az egészet kiextractolni és akkor felhasználható az éjféli új log csekkolásban is
                                   .OrderBy(f => f)
                                   .ToList();
 
@@ -98,6 +98,9 @@ namespace AdminOverlay.Classes
             {
                 return;
             }
+
+            /// TODO: Megnézni, hogy van-e új log file és ha van akkor az _aktualisFajlUtvonal = azzal    ÉS csak akkor nézze, ha _utolsoOlvasottPozicio-nak időbélyege XXXX-XX-XX 23:59 után van
+            // Directory.GetFiles és az _aktualisFaljUtvonal != utolsoFajlUtvonallal, akkor _aktualisFajlUtvonal = utolsoFajlUtvonal
 
             try
             {
