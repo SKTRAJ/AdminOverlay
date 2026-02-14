@@ -5,8 +5,7 @@ using System.Windows;
 
 namespace AdminOverlay.Classes
 {
-    // Ha fennvoltál a szerón és ment az overlay vezérlő is akár és amikor felmész új log fájl kezdődik, mert éjfél után van,
-    // akkor újra kell indítani az egészet!
+ 
     // Játszott perctől valszleg az AFK miatt fog eltérni, mert AFK-ot is beleszámol. Logból meg azt nem lehet megoldani.
 
 
