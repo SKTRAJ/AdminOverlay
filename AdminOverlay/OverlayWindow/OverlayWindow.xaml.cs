@@ -11,6 +11,10 @@ namespace AdminOverlay
             InitializeComponent();
         }
 
+
+        /// ? Paint megnyitásával összeomlik az overlay rákattintással és a paint alatt van
+
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -23,7 +27,7 @@ namespace AdminOverlay
 
             var screenWidth = SystemParameters.PrimaryScreenWidth;
             var screenHeight = SystemParameters.PrimaryScreenHeight;
-            this.Left = screenWidth - this.Width - 50;
+            this.Left = screenWidth - this.Width - 2; // minusz mennyivel van beljebb
             this.Top = (screenHeight / 2) - (this.Height / 2); // jobb közép az ablak
         }
 

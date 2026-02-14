@@ -8,7 +8,7 @@ namespace AdminOverlay
     public partial class MainWindow : Window
     {
         private OverlayWindow? _overlay;
-        private LogOlvaso _logOlvaso;
+        private LogReader _logOlvaso;
         private DispatcherTimer? _timer;
 
         public MainWindow()
@@ -16,23 +16,20 @@ namespace AdminOverlay
             InitializeComponent();
 
             
-            _logOlvaso = new LogOlvaso();
+            _logOlvaso = new LogReader();
            
             txtBemenet.Text = Properties.Settings.Default.mentettAdminNev;
             logBemenet.Text = Properties.Settings.Default.mentettLogUtvonal;
         }
 
-        private void Timer_Tick(object? sender, EventArgs e)
+        private async void Timer_Tick(object? sender, EventArgs e)
         {
-            _logOlvaso.OlvasdAzUjSorokat();
+            await _logOlvaso.ReadNewLineAsync();
 
             if (_overlay != null)
             {
-                // Report
                 string valosReportSzam = _logOlvaso.reportSzamlalo.ToString();
 
-                // OnDuty / OffDuty 
-                // A LogOlvasobol segéd függvények
                 string valosDuty = _logOlvaso.GetDutyTimeStr();
                 string valosOffDuty = _logOlvaso.GetOffDutyTimeStr();
 
@@ -40,7 +37,7 @@ namespace AdminOverlay
             }
         }
 
-        private void BtnStart_Click(object sender, RoutedEventArgs e)
+        private async void BtnStart_Click(object sender, RoutedEventArgs e)
         {
             if (_logOlvaso.AdminName == "")
             {
@@ -50,7 +47,9 @@ namespace AdminOverlay
 
             else if (_overlay == null)
             {
-                if (_logOlvaso.BeolvasasMindenLogbol())
+                BtnStart.IsEnabled = false;
+
+                if (await _logOlvaso.FirstReadAllLogfilesAsync())
                 {
                     _timer = new DispatcherTimer();
                     _timer.Interval = TimeSpan.FromSeconds(10); // változonak kivenni és beállítható idő
@@ -61,7 +60,6 @@ namespace AdminOverlay
                     _overlay = new OverlayWindow();
                     _overlay.Show();
 
-                    BtnStart.IsEnabled = false;
                     BtnStop.IsEnabled = true;
                     txtBemenet.IsEnabled = false;
                     logBemenet.IsEnabled = false;

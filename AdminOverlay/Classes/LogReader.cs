@@ -10,9 +10,9 @@ namespace AdminOverlay.Classes
     // Játszott perctől valszleg az AFK miatt fog eltérni, mert AFK-ot is beleszámol. Logból meg azt nem lehet megoldani.
 
 
-    public enum Statusz { Semmi, OnDuty, OffDuty }
+    public enum CurrentStatus { None, OnDuty, OffDuty }
 
-    public class LogOlvaso
+    public class LogReader
     {
 
         public string LogMappaUtvonal { get; set; } = @"C:\SeeMTA\mta\logs";
@@ -32,13 +32,13 @@ namespace AdminOverlay.Classes
 
         private DateTime _utolsoLogIdopont = DateTime.MinValue;
         private DateTime _szakaszKezdete = DateTime.MinValue;
-        private Statusz _aktualisStatusz = Statusz.Semmi;
+        private CurrentStatus _aktualisStatusz = CurrentStatus.None;
 
         // Regex az időbélyeghez: [2026-01-13 15:30:00]
         private Regex _idoBelyegRegex = new Regex(@"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]");
 
 
-        public bool BeolvasasMindenLogbol() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
+        public async Task<bool> FirstReadAllLogfilesAsync() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
         {
             if (!Directory.Exists(LogMappaUtvonal))
             {
@@ -46,16 +46,19 @@ namespace AdminOverlay.Classes
                 return false;
             }
 
+
+
+
             reportSzamlalo = 0;
             _taroltDutyPerc = 0;
             _taroltOffDutyPerc = 0;
-            _aktualisStatusz = Statusz.Semmi;
+            _aktualisStatusz = CurrentStatus.None;
             _utolsoLogIdopont = DateTime.MinValue;
 
             Regex datumosFajlMinta = new Regex(@"console-\d{4}-\d{2}-\d{2}");
 
             var fajlok = Directory.GetFiles(LogMappaUtvonal, "console-*.log")
-                                  .Where(utvonal => datumosFajlMinta.IsMatch(Path.GetFileName(utvonal)))    //// TODO: Ezt az egészet kiextractolni és akkor felhasználható az éjféli új log csekkolásban is
+                                  .Where(utvonal => datumosFajlMinta.IsMatch(Path.GetFileName(utvonal)))   
                                   .OrderBy(f => f)
                                   .ToList();
 
@@ -69,7 +72,7 @@ namespace AdminOverlay.Classes
                     using (var sr = new StreamReader(fs, Encoding.UTF8))
                     {
                         string? sor;
-                        while ((sor = sr.ReadLine()) != null)
+                        while ((sor = await sr.ReadLineAsync()) != null)
                         {
                             FeldolgozSor(sor);
                         }
@@ -87,7 +90,7 @@ namespace AdminOverlay.Classes
             return true;
         }
 
-        public void OlvasdAzUjSorokat()
+        public async Task ReadNewLineAsync()
         {
             if (string.IsNullOrEmpty(_aktualisFajlUtvonal)) return;
 
@@ -114,7 +117,7 @@ namespace AdminOverlay.Classes
                     using (var sr = new StreamReader(fs, Encoding.UTF8))
                     {
                         string? sor;
-                        while ((sor = sr.ReadLine()) != null)
+                        while ((sor = await sr.ReadLineAsync()) != null)
                         {
                             FeldolgozSor(sor);
                         }
@@ -170,22 +173,22 @@ namespace AdminOverlay.Classes
             if (sor.Contains("[SeeMTA]: Jó szórakozást kívánunk!") ||
                 sor.Contains($"[SeeMTA - AdminDuty]: {AdminName} kilépett az adminszolgálatból."))
             {
-                if (_aktualisStatusz == Statusz.OnDuty) Lezaras(aktualisSorIdeje);
+                if (_aktualisStatusz == CurrentStatus.OnDuty) Lezaras(aktualisSorIdeje);
 
-                if (_aktualisStatusz != Statusz.OffDuty)
+                if (_aktualisStatusz != CurrentStatus.OffDuty)
                 {
-                    _aktualisStatusz = Statusz.OffDuty;
+                    _aktualisStatusz = CurrentStatus.OffDuty;
                     _szakaszKezdete = aktualisSorIdeje;
                 }
             }
             // Onduty indítás trigger
             else if (sor.Contains($"[SeeMTA - AdminDuty]: {AdminName} adminszolgálatba lépett."))
             {
-                if (_aktualisStatusz == Statusz.OffDuty) Lezaras(aktualisSorIdeje);
+                if (_aktualisStatusz == CurrentStatus.OffDuty) Lezaras(aktualisSorIdeje);
 
-                if (_aktualisStatusz != Statusz.OnDuty)
+                if (_aktualisStatusz != CurrentStatus.OnDuty)
                 {
-                    _aktualisStatusz = Statusz.OnDuty;
+                    _aktualisStatusz = CurrentStatus.OnDuty;
                     _szakaszKezdete = aktualisSorIdeje;
                 }
             }
@@ -196,22 +199,22 @@ namespace AdminOverlay.Classes
 
         private void Lezaras(DateTime zarasiIdo)
         {
-            if (_aktualisStatusz == Statusz.Semmi) return;
+            if (_aktualisStatusz == CurrentStatus.None) return;
 
             double percek = (zarasiIdo - _szakaszKezdete).TotalMinutes;
             if (percek > 0)
             {
-                if (_aktualisStatusz == Statusz.OnDuty) _taroltDutyPerc += percek;
-                else if (_aktualisStatusz == Statusz.OffDuty) _taroltOffDutyPerc += percek;
+                if (_aktualisStatusz == CurrentStatus.OnDuty) _taroltDutyPerc += percek;
+                else if (_aktualisStatusz == CurrentStatus.OffDuty) _taroltOffDutyPerc += percek;
             }
-            _aktualisStatusz = Statusz.Semmi;
+            _aktualisStatusz = CurrentStatus.None;
         }
 
         // Kiiírás - a jelenleg folyó, lezáratlan időt is veszi
         public string GetDutyTimeStr()
         {
             double total = _taroltDutyPerc;
-            if (_aktualisStatusz == Statusz.OnDuty && _utolsoLogIdopont > _szakaszKezdete)
+            if (_aktualisStatusz == CurrentStatus.OnDuty && _utolsoLogIdopont > _szakaszKezdete)
             {
                 total += (_utolsoLogIdopont - _szakaszKezdete).TotalMinutes;
             }
@@ -221,7 +224,7 @@ namespace AdminOverlay.Classes
         public string GetOffDutyTimeStr()
         {
             double total = _taroltOffDutyPerc;
-            if (_aktualisStatusz == Statusz.OffDuty && _utolsoLogIdopont > _szakaszKezdete)
+            if (_aktualisStatusz == CurrentStatus.OffDuty && _utolsoLogIdopont > _szakaszKezdete)
             {
                 total += (_utolsoLogIdopont - _szakaszKezdete).TotalMinutes;
             }
