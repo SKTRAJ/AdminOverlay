@@ -26,24 +26,24 @@ namespace AdminOverlay.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string mentettAdminNev {
+        public string savedAdminName {
             get {
-                return ((string)(this["mentettAdminNev"]));
+                return ((string)(this["savedAdminName"]));
             }
             set {
-                this["mentettAdminNev"] = value;
+                this["savedAdminName"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string mentettLogUtvonal {
+        public string savedLogPath {
             get {
-                return ((string)(this["mentettLogUtvonal"]));
+                return ((string)(this["savedLogPath"]));
             }
             set {
-                this["mentettLogUtvonal"] = value;
+                this["savedLogPath"] = value;
             }
         }
     }

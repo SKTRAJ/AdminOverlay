@@ -20,8 +20,8 @@ namespace AdminOverlay
             
             _logReader = new LogReader();
            
-            txtBemenet.Text = Properties.Settings.Default.mentettAdminNev;
-            logBemenet.Text = Properties.Settings.Default.mentettLogUtvonal;
+            txtBemenet.Text = Properties.Settings.Default.savedAdminName;
+            logBemenet.Text = Properties.Settings.Default.savedLogPath;
         }
 
         private async void Timer_Tick(object? sender, EventArgs e)
@@ -156,8 +156,8 @@ namespace AdminOverlay
 
         private void WindowClosing(object sender, System.ComponentModel.CancelEventArgs e) 
         {
-            Properties.Settings.Default.mentettAdminNev = txtBemenet.Text;
-            Properties.Settings.Default.mentettLogUtvonal = logBemenet.Text;
+            Properties.Settings.Default.savedAdminName = txtBemenet.Text;
+            Properties.Settings.Default.savedLogPath = logBemenet.Text;
 
             Properties.Settings.Default.Save();
         }

@@ -2,10 +2,10 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AdminOverlay.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="mentettAdminNev" Type="System.String" Scope="User">
+    <Setting Name="savedAdminName" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="mentettLogUtvonal" Type="System.String" Scope="User">
+    <Setting Name="savedLogPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>
