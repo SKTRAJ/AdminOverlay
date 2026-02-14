@@ -7,7 +7,7 @@ namespace AdminOverlay
 {
     public partial class MainWindow : Window
     {
-        private const int LogUpdateIntervalSeconds = 10;
+        private const int LogUpdateIntervalSeconds = 60;
 
         private OverlayWindow? _overlay;
         private LogReader _logReader;

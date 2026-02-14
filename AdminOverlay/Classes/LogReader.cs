@@ -21,6 +21,8 @@ namespace AdminOverlay.Classes
 
         public string AdminName { get; set; } = ""; // Admin név
 
+        private const int _newLogFileDirectoryCheckIntervalSeconds = 8;
+
         private string? _currentLogFilePath;
         private long _lastReadLogPosition = 0;
 
@@ -128,7 +130,8 @@ namespace AdminOverlay.Classes
 
         private void CheckForNewLogFile()
         {
-            if ((DateTime.Now - _lastDirectoryCheck).TotalSeconds < 60) return; // const változóba
+            if ((DateTime.Now - _lastDirectoryCheck).TotalSeconds < _newLogFileDirectoryCheckIntervalSeconds) return;
+            
             _lastDirectoryCheck = DateTime.Now;
 
             if (string.IsNullOrEmpty(_currentLogFilePath)) return;
