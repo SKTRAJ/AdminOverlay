@@ -41,7 +41,7 @@ namespace AdminOverlay
 
         private async void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            if (_logReader.AdminName == "")
+            if (string.IsNullOrWhiteSpace(_logReader.AdminName))
             {
                 MessageBox.Show("Nem lehet üres az adminnév!");
                 return;
@@ -51,26 +51,38 @@ namespace AdminOverlay
             {
                 BtnStart.IsEnabled = false;
 
-                if (await _logReader.FirstReadAllLogfilesAsync())
+                InitializationResult result = await _logReader.FirstReadAllLogfilesAsync();
+
+                switch (result)
                 {
-                    _timer = new DispatcherTimer();
-                    _timer.Interval = TimeSpan.FromSeconds(LogUpdateIntervalSeconds); 
-                    _timer.Tick += Timer_Tick;
-                    _timer.Start();
+                    case InitializationResult.Success:
+
+                        _timer = new DispatcherTimer();
+                        _timer.Interval = TimeSpan.FromSeconds(LogUpdateIntervalSeconds);
+                        _timer.Tick += Timer_Tick;
+                        _timer.Start();
 
 
-                    _overlay = new OverlayWindow();
-                    _overlay.Show();
+                        _overlay = new OverlayWindow();
+                        _overlay.Show();
 
-                    BtnStop.IsEnabled = true;
-                    txtBemenet.IsEnabled = false;
-                    logBemenet.IsEnabled = false;
+                        BtnStop.IsEnabled = true;
+                        txtBemenet.IsEnabled = false;
+                        logBemenet.IsEnabled = false;
+
+                        break;
+
+                    case InitializationResult.DirectoryNotFound:
+                        MessageBox.Show("A megadott mappa nem található!");
+                        BtnStart.IsEnabled = true;
+                        break;
+
+                    case InitializationResult.NoLogFilesFound:
+                        MessageBox.Show("A mappában nem találhatóak 'console-*.log' fájlok!");
+                        BtnStart.IsEnabled = true;
+                        break;
                 }
-
-                
-
             }
-
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)

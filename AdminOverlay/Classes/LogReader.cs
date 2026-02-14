@@ -12,6 +12,8 @@ namespace AdminOverlay.Classes
 
     public enum DutyStatus { None, OnDuty, OffDuty }
 
+    public enum InitializationResult { Success, DirectoryNotFound, NoLogFilesFound }
+
     public class LogReader
     {
 
@@ -38,13 +40,9 @@ namespace AdminOverlay.Classes
         private Regex _timestampRegex = new Regex(@"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]");
 
 
-        public async Task<bool> FirstReadAllLogfilesAsync() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
+        public async Task<InitializationResult> FirstReadAllLogfilesAsync() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
         {
-            if (!Directory.Exists(LogDirectoryPath))
-            {
-                MessageBox.Show("Nem jó útvonal a log mappához.");
-                return false;
-            }
+            if (!Directory.Exists(LogDirectoryPath)) return InitializationResult.DirectoryNotFound;
 
             reportCounter = 0;
             _storedOnDutyMinutes = 0;
@@ -59,7 +57,7 @@ namespace AdminOverlay.Classes
                                   .OrderBy(f => f)
                                   .ToList();
 
-            if (fajlok.Count == 0) return false;
+            if (fajlok.Count == 0) return InitializationResult.NoLogFilesFound;
 
             foreach (var fajlUtvonal in fajlok)
             {
@@ -84,7 +82,7 @@ namespace AdminOverlay.Classes
                 catch { }
             }
 
-            return true;
+            return InitializationResult.Success;
         }
 
         public async Task ReadNewLineAsync()
