@@ -20,7 +20,7 @@ namespace AdminOverlay.Classes
 
         public string AdminName { get; set; } = ""; // Admin név
 
-        private const int _newLogFileDirectoryCheckIntervalSeconds = 8;
+        private const int _newLogFileDirectoryCheckIntervalSeconds = 60;
 
         private string? _currentLogFilePath;
         private long _lastReadLogPosition = 0;
