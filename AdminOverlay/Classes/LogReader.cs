@@ -10,54 +10,51 @@ namespace AdminOverlay.Classes
     // Játszott perctől valszleg az AFK miatt fog eltérni, mert AFK-ot is beleszámol. Logból meg azt nem lehet megoldani.
 
 
-    public enum CurrentStatus { None, OnDuty, OffDuty }
+    public enum DutyStatus { None, OnDuty, OffDuty }
 
     public class LogReader
     {
 
-        public string LogMappaUtvonal { get; set; } = @"C:\SeeMTA\mta\logs";
+        public string LogDirectoryPath { get; set; } = @"C:\SeeMTA\mta\logs";
 
         public string AdminName { get; set; } = ""; // Admin név
 
-        private string? _aktualisFajlUtvonal;
-        private long _utolsoOlvasottPozicio = 0;
+        private string? _currentLogFilePath;
+        private long _lastReadLogPosition = 0;
 
 
-        public int reportSzamlalo { get; private set; } = 0;
+        public int reportCounter { get; private set; } = 0;
 
 
-        private double _taroltDutyPerc = 0;
-        private double _taroltOffDutyPerc = 0;
+        private double _storedOnDutyMinutes = 0;
+        private double _storedOffDutyMinutes = 0;
 
 
-        private DateTime _utolsoLogIdopont = DateTime.MinValue;
-        private DateTime _szakaszKezdete = DateTime.MinValue;
-        private CurrentStatus _aktualisStatusz = CurrentStatus.None;
+        private DateTime _lastLogTimestamp = DateTime.MinValue;
+        private DateTime _currentStatusStartingTimestamp = DateTime.MinValue;
+        private DutyStatus _currentStatus = DutyStatus.None;
 
         // Regex az időbélyeghez: [2026-01-13 15:30:00]
-        private Regex _idoBelyegRegex = new Regex(@"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]");
+        private Regex _timestampRegex = new Regex(@"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]");
 
 
         public async Task<bool> FirstReadAllLogfilesAsync() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
         {
-            if (!Directory.Exists(LogMappaUtvonal))
+            if (!Directory.Exists(LogDirectoryPath))
             {
                 MessageBox.Show("Nem jó útvonal a log mappához.");
                 return false;
             }
 
-
-
-
-            reportSzamlalo = 0;
-            _taroltDutyPerc = 0;
-            _taroltOffDutyPerc = 0;
-            _aktualisStatusz = CurrentStatus.None;
-            _utolsoLogIdopont = DateTime.MinValue;
+            reportCounter = 0;
+            _storedOnDutyMinutes = 0;
+            _storedOffDutyMinutes = 0;
+            _currentStatus = DutyStatus.None;
+            _lastLogTimestamp = DateTime.MinValue;
 
             Regex datumosFajlMinta = new Regex(@"console-\d{4}-\d{2}-\d{2}");
 
-            var fajlok = Directory.GetFiles(LogMappaUtvonal, "console-*.log")
+            var fajlok = Directory.GetFiles(LogDirectoryPath, "console-*.log")
                                   .Where(utvonal => datumosFajlMinta.IsMatch(Path.GetFileName(utvonal)))   
                                   .OrderBy(f => f)
                                   .ToList();
@@ -74,13 +71,13 @@ namespace AdminOverlay.Classes
                         string? sor;
                         while ((sor = await sr.ReadLineAsync()) != null)
                         {
-                            FeldolgozSor(sor);
+                            ProcessLine(sor);
                         }
 
                         if (fajlUtvonal == fajlok.Last())
                         {
-                            _aktualisFajlUtvonal = fajlUtvonal;
-                            _utolsoOlvasottPozicio = fs.Position;
+                            _currentLogFilePath = fajlUtvonal;
+                            _lastReadLogPosition = fs.Position;
                         }
                     }
                 }
@@ -92,12 +89,12 @@ namespace AdminOverlay.Classes
 
         public async Task ReadNewLineAsync()
         {
-            if (string.IsNullOrEmpty(_aktualisFajlUtvonal)) return;
+            if (string.IsNullOrEmpty(_currentLogFilePath)) return;
 
 
-            FileInfo fi = new FileInfo(_aktualisFajlUtvonal);
+            FileInfo fi = new FileInfo(_currentLogFilePath);
 
-            if (!fi.Exists || fi.Length == _utolsoOlvasottPozicio)
+            if (!fi.Exists || fi.Length == _lastReadLogPosition)
             {
                 return;
             }
@@ -108,21 +105,21 @@ namespace AdminOverlay.Classes
             try
             {
 
-                using (var fs = new FileStream(_aktualisFajlUtvonal, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var fs = new FileStream(_currentLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    if (fs.Length < _utolsoOlvasottPozicio) _utolsoOlvasottPozicio = 0;
+                    if (fs.Length < _lastReadLogPosition) _lastReadLogPosition = 0;
 
-                    fs.Seek(_utolsoOlvasottPozicio, SeekOrigin.Begin);
+                    fs.Seek(_lastReadLogPosition, SeekOrigin.Begin);
 
                     using (var sr = new StreamReader(fs, Encoding.UTF8))
                     {
                         string? sor;
                         while ((sor = await sr.ReadLineAsync()) != null)
                         {
-                            FeldolgozSor(sor);
+                            ProcessLine(sor);
                         }
 
-                        _utolsoOlvasottPozicio = fs.Position;
+                        _lastReadLogPosition = fs.Position;
                     }
                 }
             }
@@ -136,97 +133,97 @@ namespace AdminOverlay.Classes
             }
         }
 
-        private void FeldolgozSor(string sor)
+        private void ProcessLine(string line)
         {
             // Reportok
-            if (sor.Contains("[SeeMTA - Siker]: Sikeresen lezártad az ügyet!") ||
-                sor.Contains("[SeeMTA - Figyelmeztetés]: A bejelentés automatikus lezárásra került"))
+            if (line.Contains("[SeeMTA - Siker]: Sikeresen lezártad az ügyet!") ||
+                line.Contains("[SeeMTA - Figyelmeztetés]: A bejelentés automatikus lezárásra került"))
             {
-                reportSzamlalo++;
+                reportCounter++;
             }
 
 
-            var match = _idoBelyegRegex.Match(sor);
-            if (!match.Success) return;
+            var regexMatch = _timestampRegex.Match(line);
+            if (!regexMatch.Success) return;
 
-            DateTime aktualisSorIdeje;
-            if (!DateTime.TryParse(match.Groups[1].Value, out aktualisSorIdeje)) return;
+            DateTime currentLineTimestamp;
+            if (!DateTime.TryParse(regexMatch.Groups[1].Value, out currentLineTimestamp)) return;
 
             // X (60 perces timeoutnál minden lezárul
-            if (_utolsoLogIdopont != DateTime.MinValue)
+            if (_lastLogTimestamp != DateTime.MinValue)
             {
-                if ((aktualisSorIdeje - _utolsoLogIdopont).TotalMinutes > 60) // (változóba)
+                if ((currentLineTimestamp - _lastLogTimestamp).TotalMinutes > 60) 
                 {
-                    Lezaras(_utolsoLogIdopont); // Lezárás az utolsó log időpontnál lesz, vagyis visszaveszi a 60 percét magának, amivel több lenne. Ha 60 percig nem lenne egy log sor se / eltérés van, akkor feljebb lehet venni esetleg.
+                    Lezaras(_lastLogTimestamp); // Lezárás az utolsó log időpontnál lesz, vagyis visszaveszi a 60 percét magának, amivel több lenne. Ha 60 percig nem lenne egy log sor se / eltérés van, akkor feljebb lehet venni esetleg.
                 }
             }
 
 
-            if (sor.Contains("SeeMTA logger started"))
+            if (line.Contains("SeeMTA logger started"))
             {
-                if (_utolsoLogIdopont != DateTime.MinValue) Lezaras(_utolsoLogIdopont);
-                _utolsoLogIdopont = aktualisSorIdeje; // loggernél minden lezárul és az előtte lévő sor időbélyegét nézi
+                if (_lastLogTimestamp != DateTime.MinValue) Lezaras(_lastLogTimestamp);
+                _lastLogTimestamp = currentLineTimestamp; // loggernél minden lezárul és az előtte lévő sor időbélyegét nézi
                 return;
             }
 
             // Offduty indítás trigger
-            if (sor.Contains("[SeeMTA]: Jó szórakozást kívánunk!") ||
-                sor.Contains($"[SeeMTA - AdminDuty]: {AdminName} kilépett az adminszolgálatból."))
+            if (line.Contains("[SeeMTA]: Jó szórakozást kívánunk!") ||
+                line.Contains($"[SeeMTA - AdminDuty]: {AdminName} kilépett az adminszolgálatból."))
             {
-                if (_aktualisStatusz == CurrentStatus.OnDuty) Lezaras(aktualisSorIdeje);
+                if (_currentStatus == DutyStatus.OnDuty) Lezaras(currentLineTimestamp);
 
-                if (_aktualisStatusz != CurrentStatus.OffDuty)
+                if (_currentStatus != DutyStatus.OffDuty)
                 {
-                    _aktualisStatusz = CurrentStatus.OffDuty;
-                    _szakaszKezdete = aktualisSorIdeje;
+                    _currentStatus = DutyStatus.OffDuty;
+                    _currentStatusStartingTimestamp = currentLineTimestamp;
                 }
             }
             // Onduty indítás trigger
-            else if (sor.Contains($"[SeeMTA - AdminDuty]: {AdminName} adminszolgálatba lépett."))
+            else if (line.Contains($"[SeeMTA - AdminDuty]: {AdminName} adminszolgálatba lépett."))
             {
-                if (_aktualisStatusz == CurrentStatus.OffDuty) Lezaras(aktualisSorIdeje);
+                if (_currentStatus == DutyStatus.OffDuty) Lezaras(currentLineTimestamp);
 
-                if (_aktualisStatusz != CurrentStatus.OnDuty)
+                if (_currentStatus != DutyStatus.OnDuty)
                 {
-                    _aktualisStatusz = CurrentStatus.OnDuty;
-                    _szakaszKezdete = aktualisSorIdeje;
+                    _currentStatus = DutyStatus.OnDuty;
+                    _currentStatusStartingTimestamp = currentLineTimestamp;
                 }
             }
 
 
-            _utolsoLogIdopont = aktualisSorIdeje;
+            _lastLogTimestamp = currentLineTimestamp;
         }
 
-        private void Lezaras(DateTime zarasiIdo)
+        private void Lezaras(DateTime currentStatusClosingTimestamp)
         {
-            if (_aktualisStatusz == CurrentStatus.None) return;
+            if (_currentStatus == DutyStatus.None) return;
 
-            double percek = (zarasiIdo - _szakaszKezdete).TotalMinutes;
-            if (percek > 0)
+            double minutes = (currentStatusClosingTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
+            if (minutes > 0)
             {
-                if (_aktualisStatusz == CurrentStatus.OnDuty) _taroltDutyPerc += percek;
-                else if (_aktualisStatusz == CurrentStatus.OffDuty) _taroltOffDutyPerc += percek;
+                if (_currentStatus == DutyStatus.OnDuty) _storedOnDutyMinutes += minutes;
+                else if (_currentStatus == DutyStatus.OffDuty) _storedOffDutyMinutes += minutes;
             }
-            _aktualisStatusz = CurrentStatus.None;
+            _currentStatus = DutyStatus.None;
         }
 
         // Kiiírás - a jelenleg folyó, lezáratlan időt is veszi
         public string GetDutyTimeStr()
         {
-            double total = _taroltDutyPerc;
-            if (_aktualisStatusz == CurrentStatus.OnDuty && _utolsoLogIdopont > _szakaszKezdete)
+            double total = _storedOnDutyMinutes;
+            if (_currentStatus == DutyStatus.OnDuty && _lastLogTimestamp > _currentStatusStartingTimestamp)
             {
-                total += (_utolsoLogIdopont - _szakaszKezdete).TotalMinutes;
+                total += (_lastLogTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
             }
             return Math.Floor(total).ToString("F0");
         }
 
         public string GetOffDutyTimeStr()
         {
-            double total = _taroltOffDutyPerc;
-            if (_aktualisStatusz == CurrentStatus.OffDuty && _utolsoLogIdopont > _szakaszKezdete)
+            double total = _storedOffDutyMinutes;
+            if (_currentStatus == DutyStatus.OffDuty && _lastLogTimestamp > _currentStatusStartingTimestamp)
             {
-                total += (_utolsoLogIdopont - _szakaszKezdete).TotalMinutes;
+                total += (_lastLogTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
             }
             return Math.Floor(total).ToString("F0");
         }

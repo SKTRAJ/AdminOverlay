@@ -28,7 +28,7 @@ namespace AdminOverlay
 
             if (_overlay != null)
             {
-                string valosReportSzam = _logOlvaso.reportSzamlalo.ToString();
+                string valosReportSzam = _logOlvaso.reportCounter.ToString();
 
                 string valosDuty = _logOlvaso.GetDutyTimeStr();
                 string valosOffDuty = _logOlvaso.GetOffDutyTimeStr();
@@ -122,11 +122,11 @@ namespace AdminOverlay
                 if (string.IsNullOrWhiteSpace(logBemenet.Text))
                 {
                     
-                    _logOlvaso.LogMappaUtvonal = @"C:\SeeMTA\mta\logs\";
+                    _logOlvaso.LogDirectoryPath = @"C:\SeeMTA\mta\logs\";
                 }
                 else
                 {
-                    _logOlvaso.LogMappaUtvonal = logBemenet.Text;
+                    _logOlvaso.LogDirectoryPath = logBemenet.Text;
                 }
             }
         }
