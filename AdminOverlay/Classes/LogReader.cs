@@ -123,10 +123,6 @@ namespace AdminOverlay.Classes
                     }
                 }
             }
-            catch (IOException)
-            {
-
-            }
             catch
             {
 

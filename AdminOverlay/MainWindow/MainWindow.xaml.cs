@@ -7,8 +7,10 @@ namespace AdminOverlay
 {
     public partial class MainWindow : Window
     {
+        private const int LogUpdateIntervalSeconds = 10;
+
         private OverlayWindow? _overlay;
-        private LogReader _logOlvaso;
+        private LogReader _logReader;
         private DispatcherTimer? _timer;
 
         public MainWindow()
@@ -16,7 +18,7 @@ namespace AdminOverlay
             InitializeComponent();
 
             
-            _logOlvaso = new LogReader();
+            _logReader = new LogReader();
            
             txtBemenet.Text = Properties.Settings.Default.mentettAdminNev;
             logBemenet.Text = Properties.Settings.Default.mentettLogUtvonal;
@@ -24,22 +26,22 @@ namespace AdminOverlay
 
         private async void Timer_Tick(object? sender, EventArgs e)
         {
-            await _logOlvaso.ReadNewLineAsync();
+            await _logReader.ReadNewLineAsync();
 
             if (_overlay != null)
             {
-                string valosReportSzam = _logOlvaso.reportCounter.ToString();
+                string displayReportCount = _logReader.reportCounter.ToString();
 
-                string valosDuty = _logOlvaso.GetDutyTimeStr();
-                string valosOffDuty = _logOlvaso.GetOffDutyTimeStr();
+                string displayOnDutyMinutes = _logReader.GetDutyTimeStr();
+                string displayOffDutyMinutes = _logReader.GetOffDutyTimeStr();
 
-                _overlay.FrissitAdatok(valosReportSzam, valosDuty, valosOffDuty);
+                _overlay.UpdateDisplayedStats(displayReportCount, displayOnDutyMinutes, displayOffDutyMinutes);
             }
         }
 
         private async void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            if (_logOlvaso.AdminName == "")
+            if (_logReader.AdminName == "")
             {
                 MessageBox.Show("Nem lehet üres az adminnév!");
                 return;
@@ -49,10 +51,10 @@ namespace AdminOverlay
             {
                 BtnStart.IsEnabled = false;
 
-                if (await _logOlvaso.FirstReadAllLogfilesAsync())
+                if (await _logReader.FirstReadAllLogfilesAsync())
                 {
                     _timer = new DispatcherTimer();
-                    _timer.Interval = TimeSpan.FromSeconds(10); // változonak kivenni és beállítható idő
+                    _timer.Interval = TimeSpan.FromSeconds(LogUpdateIntervalSeconds); 
                     _timer.Tick += Timer_Tick;
                     _timer.Start();
 
@@ -101,9 +103,9 @@ namespace AdminOverlay
 
         private void TxtBemenet_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            if (_logOlvaso != null)
+            if (_logReader != null)
             {
-                _logOlvaso.AdminName = txtBemenet.Text;
+                _logReader.AdminName = txtBemenet.Text;
             }
         }
 
@@ -117,16 +119,16 @@ namespace AdminOverlay
 
         private void logBemenet_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         { 
-            if (_logOlvaso != null)
+            if (_logReader != null)
             {
                 if (string.IsNullOrWhiteSpace(logBemenet.Text))
                 {
                     
-                    _logOlvaso.LogDirectoryPath = @"C:\SeeMTA\mta\logs\";
+                    _logReader.LogDirectoryPath = @"C:\SeeMTA\mta\logs\";
                 }
                 else
                 {
-                    _logOlvaso.LogDirectoryPath = logBemenet.Text;
+                    _logReader.LogDirectoryPath = logBemenet.Text;
                 }
             }
         }

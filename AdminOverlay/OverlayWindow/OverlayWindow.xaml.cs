@@ -12,9 +12,6 @@ namespace AdminOverlay
         }
 
 
-        /// ? Paint megnyitásával összeomlik az overlay rákattintással és a paint alatt van
-
-
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -32,11 +29,11 @@ namespace AdminOverlay
         }
 
 
-        public void FrissitAdatok(string reportSzam, string dutyPerc, string offDutyPerc)
+        public void UpdateDisplayedStats(string reportCount, string onDutyMinutes, string offDutyMinutes)
         {
-            TxtReport.Text = reportSzam;
-            TxtDuty.Text = dutyPerc;
-            TxtOffDuty.Text = offDutyPerc;
+            TxtReport.Text = reportCount;
+            TxtDuty.Text = onDutyMinutes;
+            TxtOffDuty.Text = offDutyMinutes;
         }
 
         #region Windows API
