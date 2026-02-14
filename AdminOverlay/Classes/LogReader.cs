@@ -24,6 +24,7 @@ namespace AdminOverlay.Classes
         private string? _currentLogFilePath;
         private long _lastReadLogPosition = 0;
 
+        private DateTime _lastDirectoryCheck = DateTime.MinValue;
 
         public int reportCounter { get; private set; } = 0;
 
@@ -37,10 +38,14 @@ namespace AdminOverlay.Classes
         private DutyStatus _currentStatus = DutyStatus.None;
 
         // Regex az időbélyeghez: [2026-01-13 15:30:00]
-        private Regex _timestampRegex = new Regex(@"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]");
+        private Regex _timestampRegex = new Regex(@"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]", RegexOptions.Compiled);
+
+        // Regex a log file nevéhez: console-2026-12-02
+
+        private Regex _logFileNameRegex = new Regex(@"console-\d{4}-\d{2}-\d{2}", RegexOptions.Compiled);
 
 
-        public async Task<InitializationResult> FirstReadAllLogfilesAsync() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
+        public async Task<InitializationResult> FirstReadAndProcessAllLogfilesAsync() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
         {
             if (!Directory.Exists(LogDirectoryPath)) return InitializationResult.DirectoryNotFound;
 
@@ -50,20 +55,18 @@ namespace AdminOverlay.Classes
             _currentStatus = DutyStatus.None;
             _lastLogTimestamp = DateTime.MinValue;
 
-            Regex datumosFajlMinta = new Regex(@"console-\d{4}-\d{2}-\d{2}");
-
-            var fajlok = Directory.GetFiles(LogDirectoryPath, "console-*.log")
-                                  .Where(utvonal => datumosFajlMinta.IsMatch(Path.GetFileName(utvonal)))   
+            var files = Directory.GetFiles(LogDirectoryPath, "console-*.log")
+                                  .Where(filePath => _logFileNameRegex.IsMatch(Path.GetFileName(filePath)))   
                                   .OrderBy(f => f)
                                   .ToList();
 
-            if (fajlok.Count == 0) return InitializationResult.NoLogFilesFound;
+            if (files.Count == 0) return InitializationResult.NoLogFilesFound;
 
-            foreach (var fajlUtvonal in fajlok)
+            foreach (var filePath in files)
             {
                 try
                 {
-                    using (var fs = new FileStream(fajlUtvonal, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                    using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                     using (var sr = new StreamReader(fs, Encoding.UTF8))
                     {
                         string? sor;
@@ -72,9 +75,9 @@ namespace AdminOverlay.Classes
                             ProcessLine(sor);
                         }
 
-                        if (fajlUtvonal == fajlok.Last())
+                        if (filePath == files.Last())
                         {
-                            _currentLogFilePath = fajlUtvonal;
+                            _currentLogFilePath = filePath;
                             _lastReadLogPosition = fs.Position;
                         }
                     }
@@ -85,46 +88,66 @@ namespace AdminOverlay.Classes
             return InitializationResult.Success;
         }
 
-        public async Task ReadNewLineAsync()
+        public async Task ReadAndProcessNewLinesAsync()
         {
             if (string.IsNullOrEmpty(_currentLogFilePath)) return;
 
-
             FileInfo fi = new FileInfo(_currentLogFilePath);
 
-            if (!fi.Exists || fi.Length == _lastReadLogPosition)
+            if (fi.Exists || fi.Length != _lastReadLogPosition)
             {
-                return;
+                try
+                {
+
+                    using (var fs = new FileStream(_currentLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+
+                        fs.Seek(_lastReadLogPosition, SeekOrigin.Begin);
+
+                        using (var sr = new StreamReader(fs, Encoding.UTF8))
+                        {
+                            string? line;
+                            while ((line = await sr.ReadLineAsync()) != null)
+                            {
+                                ProcessLine(line);
+                            }
+
+                            _lastReadLogPosition = fs.Position;
+                        }
+                    }
+                }
+                catch
+                {
+
+                }
             }
 
-            /// TODO: Megnézni, hogy van-e új log file és ha van akkor az _aktualisFajlUtvonal = azzal    ÉS csak akkor nézze, ha _utolsoOlvasottPozicio-nak időbélyege XXXX-XX-XX 23:59 után van
-            // Directory.GetFiles és az _aktualisFaljUtvonal != utolsoFajlUtvonallal, akkor _aktualisFajlUtvonal = utolsoFajlUtvonal
+            CheckForNewLogFile();
+
+        }
+
+        private void CheckForNewLogFile()
+        {
+            if ((DateTime.Now - _lastDirectoryCheck).TotalSeconds < 60) return; // const változóba
+            _lastDirectoryCheck = DateTime.Now;
+
+            if (string.IsNullOrEmpty(_currentLogFilePath)) return;
 
             try
             {
 
-                using (var fs = new FileStream(_currentLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                var latestLogFile = Directory.EnumerateFiles(LogDirectoryPath, "console-*.log")
+                                             .Where(f => _logFileNameRegex.IsMatch(f))
+                                             .OrderByDescending(f => f)
+                                             .FirstOrDefault();
+
+                if (latestLogFile != null && string.Compare(latestLogFile, _currentLogFilePath, StringComparison.Ordinal) > 0)
                 {
-                    if (fs.Length < _lastReadLogPosition) _lastReadLogPosition = 0;
-
-                    fs.Seek(_lastReadLogPosition, SeekOrigin.Begin);
-
-                    using (var sr = new StreamReader(fs, Encoding.UTF8))
-                    {
-                        string? sor;
-                        while ((sor = await sr.ReadLineAsync()) != null)
-                        {
-                            ProcessLine(sor);
-                        }
-
-                        _lastReadLogPosition = fs.Position;
-                    }
+                    _currentLogFilePath = latestLogFile;
+                    _lastReadLogPosition = 0;
                 }
             }
-            catch
-            {
-
-            }
+            catch { }
         }
 
         private void ProcessLine(string line)

@@ -26,7 +26,7 @@ namespace AdminOverlay
 
         private async void Timer_Tick(object? sender, EventArgs e)
         {
-            await _logReader.ReadNewLineAsync();
+            await _logReader.ReadAndProcessNewLinesAsync();
 
             if (_overlay != null)
             {
@@ -51,7 +51,7 @@ namespace AdminOverlay
             {
                 BtnStart.IsEnabled = false;
 
-                InitializationResult result = await _logReader.FirstReadAllLogfilesAsync();
+                InitializationResult result = await _logReader.FirstReadAndProcessAllLogfilesAsync();
 
                 switch (result)
                 {
