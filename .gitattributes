@@ -62,7 +62,3 @@
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
 
-###############################################################################
-# GitHub nyelv statisztika: XAML megjelenítése
-###############################################################################
-*.xaml linguist-detectable=true
