@@ -1,11 +1,10 @@
 ﻿using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows;
 
 namespace AdminOverlay.Classes
 {
- 
+
     // Játszott perctől valszleg az AFK miatt fog eltérni, mert AFK-ot is beleszámol. Logból meg azt nem lehet megoldani.
 
 
@@ -27,7 +26,7 @@ namespace AdminOverlay.Classes
 
         private DateTime _lastDirectoryCheck = DateTime.MinValue;
 
-        public int reportCounter { get; private set; } = 0;
+        public int ReportCounter { get; private set; } = 0;
 
 
         private double _storedOnDutyMinutes = 0;
@@ -50,14 +49,14 @@ namespace AdminOverlay.Classes
         {
             if (!Directory.Exists(LogDirectoryPath)) return InitializationResult.DirectoryNotFound;
 
-            reportCounter = 0;
+            ReportCounter = 0;
             _storedOnDutyMinutes = 0;
             _storedOffDutyMinutes = 0;
             _currentStatus = DutyStatus.None;
             _lastLogTimestamp = DateTime.MinValue;
 
             var files = Directory.GetFiles(LogDirectoryPath, "console-*.log")
-                                  .Where(filePath => _logFileNameRegex.IsMatch(Path.GetFileName(filePath)))   
+                                  .Where(filePath => _logFileNameRegex.IsMatch(Path.GetFileName(filePath)))
                                   .OrderBy(f => f)
                                   .ToList();
 
@@ -95,7 +94,7 @@ namespace AdminOverlay.Classes
 
             FileInfo fi = new FileInfo(_currentLogFilePath);
 
-            if (fi.Exists || fi.Length != _lastReadLogPosition)
+            if (fi.Exists && fi.Length != _lastReadLogPosition)
             {
                 try
                 {
@@ -130,7 +129,7 @@ namespace AdminOverlay.Classes
         private void CheckForNewLogFile()
         {
             if ((DateTime.Now - _lastDirectoryCheck).TotalSeconds < _newLogFileDirectoryCheckIntervalSeconds) return;
-            
+
             _lastDirectoryCheck = DateTime.Now;
 
             if (string.IsNullOrEmpty(_currentLogFilePath)) return;
@@ -158,7 +157,7 @@ namespace AdminOverlay.Classes
             if (line.Contains("[SeeMTA - Siker]: Sikeresen lezártad az ügyet!") ||
                 line.Contains("[SeeMTA - Figyelmeztetés]: A bejelentés automatikus lezárásra került"))
             {
-                reportCounter++;
+                ReportCounter++;
             }
 
 
@@ -171,7 +170,7 @@ namespace AdminOverlay.Classes
             // X (60 perces timeoutnál minden lezárul
             if (_lastLogTimestamp != DateTime.MinValue)
             {
-                if ((currentLineTimestamp - _lastLogTimestamp).TotalMinutes > 60) 
+                if ((currentLineTimestamp - _lastLogTimestamp).TotalMinutes > 60)
                 {
                     Lezaras(_lastLogTimestamp); // Lezárás az utolsó log időpontnál lesz, vagyis visszaveszi a 60 percét magának, amivel több lenne. Ha 60 percig nem lenne egy log sor se / eltérés van, akkor feljebb lehet venni esetleg.
                 }

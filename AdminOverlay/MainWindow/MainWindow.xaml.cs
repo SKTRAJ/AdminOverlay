@@ -30,7 +30,7 @@ namespace AdminOverlay
 
             if (_overlay != null)
             {
-                string displayReportCount = _logReader.reportCounter.ToString();
+                string displayReportCount = _logReader.ReportCounter.ToString();
 
                 string displayOnDutyMinutes = _logReader.GetDutyTimeStr();
                 string displayOffDutyMinutes = _logReader.GetOffDutyTimeStr();
