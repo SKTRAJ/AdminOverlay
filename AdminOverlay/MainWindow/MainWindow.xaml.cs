@@ -65,7 +65,6 @@ namespace AdminOverlay
                 MessageBox.Show("Nem lehet üres az adminnév!");
                 return;
             }
-
             else if (_overlay == null)
             {
                 BtnStart.IsEnabled = false;
@@ -75,6 +74,21 @@ namespace AdminOverlay
                 switch (result)
                 {
                     case InitializationResult.Success:
+
+                        _overlay = new OverlayWindow();
+                        _overlay.Show();
+
+
+
+                        string displayReportCount = _logReader.ReportCounter.ToString();
+
+                        string displayOnDutyMinutes = _logReader.GetDutyTimeStr();
+                        string displayOffDutyMinutes = _logReader.GetOffDutyTimeStr();
+
+                        _overlay.UpdateDisplayedStats(displayReportCount, displayOnDutyMinutes, displayOffDutyMinutes);
+
+                        
+
 
                         _timer = new DispatcherTimer();
                         _timer.Interval = TimeSpan.FromSeconds(LogUpdateIntervalSeconds);
@@ -88,11 +102,6 @@ namespace AdminOverlay
                             _topmostTimer.Tick += TopmostTimer_Tick;
                             _topmostTimer.Start();
                         }
-                            
-
-
-                        _overlay = new OverlayWindow();
-                        _overlay.Show();
 
                         BtnStop.IsEnabled = true;
                         txtBemenet.IsEnabled = false;
