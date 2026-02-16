@@ -33,7 +33,13 @@
         TextChanged="logBemenet_TextChanged"
         MaxLines="1"              
         AcceptsReturn="False"
-        KeyDown="TxtBemenet_KeyDown"/>
+        KeyDown="logBemenet_KeyDown"/>
+
+        <CheckBox x:Name="chkForceTopmost"
+                  Content="Ha eltűnik az ablak, nyomd be"
+                  HorizontalAlignment="Center"
+                  Margin="0,15,0,0"
+                  FontSize="14"/>
 
     </StackPanel>
 </Window>

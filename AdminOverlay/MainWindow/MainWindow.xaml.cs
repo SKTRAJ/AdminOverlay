@@ -13,6 +13,8 @@ namespace AdminOverlay
         private LogReader _logReader;
         private DispatcherTimer? _timer;
 
+        private DispatcherTimer? _topmostTimer;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -22,6 +24,7 @@ namespace AdminOverlay
            
             txtBemenet.Text = Properties.Settings.Default.savedAdminName;
             logBemenet.Text = Properties.Settings.Default.savedLogPath;
+            chkForceTopmost.IsChecked = Properties.Settings.Default.savedForceTopmost;
         }
 
         private async void Timer_Tick(object? sender, EventArgs e)
@@ -36,6 +39,22 @@ namespace AdminOverlay
                 string displayOffDutyMinutes = _logReader.GetOffDutyTimeStr();
 
                 _overlay.UpdateDisplayedStats(displayReportCount, displayOnDutyMinutes, displayOffDutyMinutes);
+            }
+        }
+
+        private void TopmostTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_overlay != null)
+            {
+                if (_overlay.Topmost)
+                {
+                    _overlay.Topmost = false;
+                    _overlay.Topmost = true;
+                }
+                else
+                {
+                    _overlay.Topmost = true;
+                }
             }
         }
 
@@ -62,6 +81,15 @@ namespace AdminOverlay
                         _timer.Tick += Timer_Tick;
                         _timer.Start();
 
+                        if (chkForceTopmost.IsChecked == true)
+                        {
+                            _topmostTimer = new DispatcherTimer();
+                            _topmostTimer.Interval = TimeSpan.FromSeconds(1);
+                            _topmostTimer.Tick += TopmostTimer_Tick;
+                            _topmostTimer.Start();
+                        }
+                            
+
 
                         _overlay = new OverlayWindow();
                         _overlay.Show();
@@ -69,6 +97,7 @@ namespace AdminOverlay
                         BtnStop.IsEnabled = true;
                         txtBemenet.IsEnabled = false;
                         logBemenet.IsEnabled = false;
+                        chkForceTopmost.IsEnabled = false;
 
                         break;
 
@@ -99,10 +128,17 @@ namespace AdminOverlay
                 _overlay = null;
             }
 
+            if (_topmostTimer != null)
+            {
+                _topmostTimer.Stop();
+                _topmostTimer = null;
+            }
+
             BtnStart.IsEnabled = true;
             BtnStop.IsEnabled = false;
             txtBemenet.IsEnabled = true;
             logBemenet.IsEnabled = true;
+            chkForceTopmost.IsEnabled = true;
         }
 
 
@@ -110,6 +146,7 @@ namespace AdminOverlay
         {
             _timer?.Stop();
             _overlay?.Close();
+            _topmostTimer?.Stop();
             base.OnClosed(e);
         }
 
@@ -158,6 +195,8 @@ namespace AdminOverlay
         {
             Properties.Settings.Default.savedAdminName = txtBemenet.Text;
             Properties.Settings.Default.savedLogPath = logBemenet.Text;
+
+            Properties.Settings.Default.savedForceTopmost = chkForceTopmost.IsChecked ?? false;
 
             Properties.Settings.Default.Save();
         }

@@ -46,5 +46,17 @@ namespace AdminOverlay.Properties {
                 this["savedLogPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool savedForceTopmost {
+            get {
+                return ((bool)(this["savedForceTopmost"]));
+            }
+            set {
+                this["savedForceTopmost"] = value;
+            }
+        }
     }
 }
