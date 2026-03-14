@@ -1,16 +1,13 @@
-﻿using System.IO;
+﻿using AdminOverlay.Enums;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+
 
 namespace AdminOverlay.Classes
 {
 
     // Játszott perctől valszleg az AFK miatt fog eltérni, mert AFK-ot is beleszámol. Logból meg azt nem lehet megoldani.
-
-
-    public enum DutyStatus { None, OnDuty, OffDuty }
-
-    public enum InitializationResult { Success, DirectoryNotFound, NoLogFilesFound }
 
     public class LogReader
     {
