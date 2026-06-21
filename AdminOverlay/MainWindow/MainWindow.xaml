@@ -35,6 +35,15 @@
         AcceptsReturn="False"
         KeyDown="logBemenet_KeyDown"/>
 
+        <TextBlock Text="Szűrés kezdete:" FontSize="16" FontWeight="Normal" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+        <TextBlock Text="(Opcionális)" FontSize="12" FontWeight="Normal" HorizontalAlignment="Center" Margin="0,0,0,3.5"/>
+        <DatePicker x:Name="dpStart" Width="150" HorizontalAlignment="Center" SelectedDateChanged="DpDate_SelectedDateChanged"/>
+
+        <TextBlock Text="Szűrés vége:" FontSize="16" FontWeight="Normal" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+        <TextBlock Text="(Opcionális)" FontSize="12" FontWeight="Normal" HorizontalAlignment="Center" Margin="0,0,0,3.5"/>
+        <DatePicker x:Name="dpEnd" Width="150" HorizontalAlignment="Center" SelectedDateChanged="DpDate_SelectedDateChanged"/>
+ 
+
         <CheckBox x:Name="chkForceTopmost"
                   Content="Ha eltűnik az ablak, nyomd be"
                   HorizontalAlignment="Center"

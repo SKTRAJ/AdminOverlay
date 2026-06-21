@@ -23,6 +23,11 @@ namespace AdminOverlay.Classes
 
         private DateTime _lastDirectoryCheck = DateTime.MinValue;
 
+
+        public DateTime? FilterStartDate { get; set; }
+        public DateTime? FilterEndDate { get; set; }
+
+
         public int ReportCounter { get; private set; } = 0;
 
 
@@ -42,7 +47,7 @@ namespace AdminOverlay.Classes
         private Regex _logFileNameRegex = new Regex(@"console-\d{4}-\d{2}-\d{2}", RegexOptions.Compiled);
 
 
-        public async Task<InitializationResult> FirstReadAndProcessAllLogfilesAsync() // Ha hamis, akkor azért lépett ki, mert nem volt jó az útvonal vagy 0 fájl van benne -> Ez fel van használva, hogy a Start button ne kezdődjön el, ha nem jó az útvonal.
+        public async Task<InitializationResult> FirstReadAndProcessAllLogfilesAsync()
         {
             if (!Directory.Exists(LogDirectoryPath)) return InitializationResult.DirectoryNotFound;
 
@@ -57,7 +62,33 @@ namespace AdminOverlay.Classes
                                   .OrderBy(f => f)
                                   .ToList();
 
+           
+
+
+
+
+
+
+            if (FilterStartDate.HasValue)
+            {
+                string skipBeforeDateStr = FilterStartDate.Value.AddDays(-1).ToString("yyyy-MM-dd");
+                files = files.Where(f => string.Compare(Path.GetFileNameWithoutExtension(f), $"console-{skipBeforeDateStr}", StringComparison.Ordinal) >= 0).ToList();
+            }
+            
+            if (FilterEndDate.HasValue)
+            {
+                
+                string skipAfterDateStr = FilterEndDate.Value.ToString("yyyy-MM-dd");
+                files = files.Where(f => string.Compare(Path.GetFileNameWithoutExtension(f), $"console-{skipAfterDateStr}", StringComparison.Ordinal) <= 0).ToList();
+            }
+
+
             if (files.Count == 0) return InitializationResult.NoLogFilesFound;
+
+
+
+
+
 
             foreach (var filePath in files)
             {
@@ -87,7 +118,10 @@ namespace AdminOverlay.Classes
 
         public async Task ReadAndProcessNewLinesAsync()
         {
+            if (FilterEndDate.HasValue && FilterEndDate.Value.Date < DateTime.Today) return;
+
             if (string.IsNullOrEmpty(_currentLogFilePath)) return;
+
 
             FileInfo fi = new FileInfo(_currentLogFilePath);
 
@@ -148,21 +182,36 @@ namespace AdminOverlay.Classes
             catch { }
         }
 
-        private void ProcessLine(string line)
+        private void ProcessLine(string line) 
         {
-            // Reportok
-            if (line.Contains("[SeeMTA - Siker]: Sikeresen lezártad az ügyet!") ||
-                line.Contains("[SeeMTA - Figyelmeztetés]: A bejelentés automatikus lezárásra került"))
-            {
-                ReportCounter++;
-            }
-
 
             var regexMatch = _timestampRegex.Match(line);
             if (!regexMatch.Success) return;
 
             DateTime currentLineTimestamp;
             if (!DateTime.TryParse(regexMatch.Groups[1].Value, out currentLineTimestamp)) return;
+
+
+            // Reportok
+
+            bool isInFilterRange = true;
+
+            if (FilterStartDate.HasValue && currentLineTimestamp < FilterStartDate.Value.Date)
+                isInFilterRange = false;
+            if (FilterEndDate.HasValue && currentLineTimestamp >= FilterEndDate.Value.Date.AddDays(1))
+                isInFilterRange = false;
+
+            if (isInFilterRange)
+            {
+                if (line.Contains("[SeeMTA - Siker]: Sikeresen lezártad az ügyet!") ||
+                line.Contains("[SeeMTA - Figyelmeztetés]: A bejelentés automatikus lezárásra került"))
+                {
+                    ReportCounter++;
+                }
+            } 
+            
+
+
 
             // X (60 perces timeoutnál minden lezárul
             if (_lastLogTimestamp != DateTime.MinValue)
@@ -207,40 +256,87 @@ namespace AdminOverlay.Classes
 
 
             _lastLogTimestamp = currentLineTimestamp;
+            return;
         }
 
         private void Lezaras(DateTime currentStatusClosingTimestamp)
         {
+            //if (_currentStatus == DutyStatus.None) return;
+
+            //double minutes = (currentStatusClosingTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
+            //if (minutes > 0)
+            //{
+            //    if (_currentStatus == DutyStatus.OnDuty) _storedOnDutyMinutes += minutes;
+            //    else if (_currentStatus == DutyStatus.OffDuty) _storedOffDutyMinutes += minutes;
+            //}
+            //_currentStatus = DutyStatus.None;
+
+
+
+
             if (_currentStatus == DutyStatus.None) return;
 
-            double minutes = (currentStatusClosingTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
+            DateTime effectiveStart = _currentStatusStartingTimestamp;
+            DateTime effectiveEnd = currentStatusClosingTimestamp;
+
+            if (FilterStartDate.HasValue && effectiveStart < FilterStartDate.Value.Date)
+                effectiveStart = FilterStartDate.Value.Date; // Ha korábban kezdődött, szűrés elejétől
+
+            if (FilterEndDate.HasValue)
+            {
+                DateTime limitEnd = FilterEndDate.Value.Date.AddDays(1); // alapvetően a datetime óra perc másodperc nélkül 00:00:00-át ad, ezért hozzá kell adni, hogy az a nap is benne legyen (+1 nap 00:00:00)
+                if (effectiveEnd > limitEnd) // (Nincs sok lezárás, szóval nem annyira megterhelő hogy itt mindig beállítjuk a limitEnd-et)
+                    effectiveEnd = limitEnd; // Ha nagyobb lenne a vége a 00:00-nál, akkor 00:00-ra tegye vissza, azzal számoljon
+            }
+
+            double minutes = (effectiveEnd - effectiveStart).TotalMinutes;
             if (minutes > 0)
             {
                 if (_currentStatus == DutyStatus.OnDuty) _storedOnDutyMinutes += minutes;
                 else if (_currentStatus == DutyStatus.OffDuty) _storedOffDutyMinutes += minutes;
             }
             _currentStatus = DutyStatus.None;
+        
+        
         }
 
         // Kiiírás - a jelenleg folyó, lezáratlan időt is veszi
-        public string GetDutyTimeStr()
-        {
-            double total = _storedOnDutyMinutes;
-            if (_currentStatus == DutyStatus.OnDuty && _lastLogTimestamp > _currentStatusStartingTimestamp)
-            {
-                total += (_lastLogTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
-            }
-            return Math.Floor(total).ToString("F0");
-        }
+        //public string GetDutyTimeStr()
+        //{
+        //    double total = _storedOnDutyMinutes;
+        //    if (_currentStatus == DutyStatus.OnDuty && _lastLogTimestamp > _currentStatusStartingTimestamp)
+        //    {
+        //        total += (_lastLogTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
+        //    }
+        //    return Math.Floor(total).ToString("F0");
+        //}
+
+        //public string GetOffDutyTimeStr()
+        //{
+        //    double total = _storedOffDutyMinutes;
+        //    if (_currentStatus == DutyStatus.OffDuty && _lastLogTimestamp > _currentStatusStartingTimestamp)
+        //    {
+        //        total += (_lastLogTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
+        //    }
+        //    return Math.Floor(total).ToString("F0");
+        //}
+
+        public string GetDutyTimeStr() // ezek mutatják real timeba, de fontos hogy nem írják felül pluszban a storedOn/OffDutyMinutes-t, csak valós időben látszódik a változás. Ha leváltódik a státusz, akkor a trigger -> lezárás miatt a stored-ba kerül.
+        => Math.Floor(_storedOnDutyMinutes + (_currentStatus == DutyStatus.OnDuty ? GetCurrentSegmentMinutes() : 0)).ToString("F0");
 
         public string GetOffDutyTimeStr()
+        => Math.Floor(_storedOffDutyMinutes + (_currentStatus == DutyStatus.OffDuty ? GetCurrentSegmentMinutes() : 0)).ToString("F0");
+
+        private double GetCurrentSegmentMinutes()
         {
-            double total = _storedOffDutyMinutes;
-            if (_currentStatus == DutyStatus.OffDuty && _lastLogTimestamp > _currentStatusStartingTimestamp)
-            {
-                total += (_lastLogTimestamp - _currentStatusStartingTimestamp).TotalMinutes;
-            }
-            return Math.Floor(total).ToString("F0");
+            if (_currentStatus == DutyStatus.None || _lastLogTimestamp <= _currentStatusStartingTimestamp)
+                return 0;
+
+            // "ha-akkor"
+            DateTime start = (FilterStartDate.HasValue && _currentStatusStartingTimestamp < FilterStartDate.Value.Date) ? FilterStartDate.Value.Date : _currentStatusStartingTimestamp;
+            DateTime end = (FilterEndDate.HasValue && _lastLogTimestamp > FilterEndDate.Value.Date.AddDays(1)) ? FilterEndDate.Value.Date.AddDays(1) : _lastLogTimestamp;
+
+            return end > start ? (end - start).TotalMinutes : 0;
         }
     }
 }

@@ -66,18 +66,33 @@ namespace AdminOverlay
                 MessageBox.Show("Nem lehet üres az adminnév!");
                 return;
             }
+            else if (dpStart.SelectedDate.HasValue && dpEnd.SelectedDate.HasValue && dpStart.SelectedDate.Value > dpEnd.SelectedDate.Value)
+            {
+                MessageBox.Show("Nem lehet a kezdő időpont későbbi, mint a végső időpont.");
+                return;
+            }
             else if (_overlay == null)
             {
+                _overlay = new OverlayWindow();
+                _overlay.Show();
+
                 BtnStart.IsEnabled = false;
 
-                InitializationResult result = await _logReader.FirstReadAndProcessAllLogfilesAsync();
+                txtBemenet.IsEnabled = false;
+                logBemenet.IsEnabled = false;
+                chkForceTopmost.IsEnabled = false;
+                dpStart.IsEnabled = false;
+                dpEnd.IsEnabled = false;
+
+                // InitializationResult result = await _logReader.FirstReadAndProcessAllLogfilesAsync();
+
+                InitializationResult result = await Task.Run(async () => await _logReader.FirstReadAndProcessAllLogfilesAsync());
 
                 switch (result)
                 {
                     case InitializationResult.Success:
 
-                        _overlay = new OverlayWindow();
-                        _overlay.Show();
+                       
 
 
 
@@ -88,7 +103,7 @@ namespace AdminOverlay
 
                         _overlay.UpdateDisplayedStats(displayReportCount, displayOnDutyMinutes, displayOffDutyMinutes);
 
-                        
+
 
 
                         _timer = new DispatcherTimer();
@@ -105,23 +120,36 @@ namespace AdminOverlay
                         }
 
                         BtnStop.IsEnabled = true;
-                        txtBemenet.IsEnabled = false;
-                        logBemenet.IsEnabled = false;
-                        chkForceTopmost.IsEnabled = false;
+
 
                         break;
 
                     case InitializationResult.DirectoryNotFound:
                         MessageBox.Show("A megadott mappa nem található!");
-                        BtnStart.IsEnabled = true;
+                        ResetUiOnFailure();
                         break;
 
                     case InitializationResult.NoLogFilesFound:
-                        MessageBox.Show("A mappában nem találhatóak 'console-*.log' fájlok!");
-                        BtnStart.IsEnabled = true;
+                        MessageBox.Show("A mappában nem találhatóak ilyen 'console-*.log' fájlok!");
+                        ResetUiOnFailure();
                         break;
                 }
             }
+        }
+
+        private void ResetUiOnFailure()
+        {
+            if (_overlay != null)
+            {
+                _overlay.Close();
+                _overlay = null;
+            }
+            BtnStart.IsEnabled = true;
+            txtBemenet.IsEnabled = true;
+            logBemenet.IsEnabled = true;
+            chkForceTopmost.IsEnabled = true;
+            dpStart.IsEnabled = true;
+            dpEnd.IsEnabled = true;
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
@@ -149,6 +177,8 @@ namespace AdminOverlay
             txtBemenet.IsEnabled = true;
             logBemenet.IsEnabled = true;
             chkForceTopmost.IsEnabled = true;
+            dpStart.IsEnabled = true;
+            dpEnd.IsEnabled = true;
         }
 
 
@@ -201,12 +231,23 @@ namespace AdminOverlay
             }
         }
 
+        private void DpDate_SelectedDateChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            
+            if (_logReader != null)
+            {
+                _logReader.FilterStartDate = dpStart.SelectedDate;
+                _logReader.FilterEndDate = dpEnd.SelectedDate;
+            }
+        }
+
         private void WindowClosing(object sender, System.ComponentModel.CancelEventArgs e) 
         {
             Properties.Settings.Default.savedAdminName = txtBemenet.Text;
             Properties.Settings.Default.savedLogPath = logBemenet.Text;
 
             Properties.Settings.Default.savedForceTopmost = chkForceTopmost.IsChecked ?? false;
+
 
             Properties.Settings.Default.Save();
         }
